@@ -5,6 +5,9 @@
 #include <fstream>
 
 
+namespace fs = std::filesystem;
+
+
 /*
 СУБД – система управления базами данных.
 БД – совокупность объектов класса.
@@ -59,44 +62,225 @@
 -Подразделения, где число сотрудников превышает number (number задаётся с клавиатуры).
 */
 
-class Database : public Educationcomp, Sciencecomp {
+int new_file_create(std::string db_name) {                          //ф-ия для создания каталога с именем db_name с учетом возможного наличия одноименных файлов
+    fs::path p;
+    int a = 2;
+    int i;
+    p = db_name;
+    std::string st1 = "1";
+    db_name.insert(db_name.size(), st1);
+    for (i = 1; i < a; i++) {
+        if (i < 10){
+            db_name.erase(db_name.size() - 1, 1);
+            st1 = std::to_string(i);
+            db_name.insert(db_name.size(), st1);
+            p = db_name;
+            if (fs::exists(p) == true) {
+                a++;
+            }
+            else {
+                fs::create_directories(p);
+            }
+        }
+        else {
+            db_name.erase(db_name.size() - 2, 2);
+            st1 = std::to_string(i);
+            db_name.insert(db_name.size(), st1);
+            p = db_name;
+            if (fs::exists(p) == true) {
+                a++;
+            }
+            else {
+                fs::create_directories(p);
+            }
+        }
+    }
+    return i-1;
+}
+
+std::string new_file_create(std::string db_name, std::string comp_name, int db_num) {   //ф-ия для создания файла внутри каталога с произвольным номером
+    db_name.insert(db_name.size(), "/");
+    db_name.insert(db_name.size(), comp_name);
+    db_name.insert(db_name.size(), "1");
+    int a = 1;
+    for(int i = 1; i < a; i++){
+        if (i < 10){
+            db_name.erase(db_name.size()-1, 1);
+            db_name.insert(db_name.size(), std::to_string(i));
+            std::ifstream namefile(db_name);                        
+            if (namefile.is_open()) {                                      
+                a++;
+            }
+            else {
+                db_name.insert(db_name.size(), ".txt");
+                std::ofstream file(db_name);
+            }
+        }
+        else {
+            db_name.erase(db_name.size()-2, 2);
+            db_name.insert(db_name.size(), std::to_string(i));
+            std::ifstream namefile(db_name);
+            if (namefile.is_open()) {
+                a++;
+            }
+            else {
+                db_name.insert(db_name.size(), ".txt");
+                std::ofstream file(db_name);
+            }
+        }
+    }
+    return db_name;
+}
+
+class DB_core {
+
+
 
 };
 
 class Educationcomp {
 public:
-    std::string compname, bossname[3];
-    int asper_num, worker_num;
+    std::string compname, bossname[3], fullname;
+    int asper_num, worker_num, database_num, educationcomp_num;     //аспиранты, работники, номер дб, номер подразделения 
     std::pair< std::string[3], int > projects;
-
+    std::string db_name = "./DB_", a;
 
 
     Educationcomp() {};
+    Educationcomp(int database_num1) {                                //создает папку с нужным номером
+        database_num = database_num1;
+        db_name.insert(db_name.size(), std::to_string(database_num));
+        fullname = new_file_create(db_name, compname, database_num);
+        educationcomp_num = fullname[fullname.size() - 1];
+    }
 };
+
+
 
 class Sciencecomp {
 public:
-    std::string compname, bossname[3];
-    int asper_num, worker_num;
-    std::pair< int, std::pair< int, int >> student; //int 1 - курс, внутренний int 1 - число студентов, внутренний int 2 - стоимость
-
-
+    std::string compname, bossname[3], fullname;
+    int asper_num, worker_num, database_num, sc_num;                //аспиранты, работники, номер дб, номер подразделения
+    std::pair< int, std::pair< int, int >> student;                 //int 1 - курс, внутренний int 1 - число студентов, внутренний int 2 - стоимость
+    std::string db_name, a;
 
     Sciencecomp() {};
+    Sciencecomp(int database_num1) {
+        database_num = database_num1;
+    }
+    void add_sc_num(int sc_num1) {
+        sc_num = sc_num1;
+    }
+
 };
+
+
+
+
+class Database{
+public: 
+    std::string db_name = "./DB_";
+    std::string sclistadr = "", eclistadr = "";                        //Переменная для адреса инфо-листов для научных и учебных компаний
+    std::string db_username, namestring;
+    int database_num = -1;
+    int pos;
+    bool is_bd_exist = false;
+    std::vector<Sciencecomp> sc;                                       //Вектор научных и учебных компаний
+    std::vector<Educationcomp> ec;
+    std::ofstream sclist, eclist;
+
+    Database() {};
+
+    std::string create_DB(std::string db_username) {                   //Ф-ия создает новую БД если такой не существует
+        std::ifstream namefile("Namelist.txt");                        //Список созданных БД
+        if (namefile.is_open()) {                                      //Получение списка имен
+            getline(namefile, namestring);
+        }
+        else {
+            return "no file";                                          //Возврат ошибки в случает отсуствия нейм-файла
+        }
+        pos = namestring.find(db_username);                            //
+        if (pos != std::string::npos) {                                //
+            is_bd_exist = true;                                        //
+            database_num = namestring[pos + db_username.size()];       //Поиск номера БД если она была создана ранее
+        }
+        if (is_bd_exist == false) {
+            database_num = new_file_create(db_name);                   //Создает файл с нумерацией
+            std::ofstream out("Namelist.txt", std::ios::app);          //Проверка на нейм-файл не осуществляется т.к. была до этого
+            out << db_username << database_num << ";";                 //Добавление в нейм-файл имени и номера БД
+            is_bd_exist = true;
+
+            sclistadr = db_name;                                       //"Сборка" полного адреса нейм-файла для SC
+            std::string a = std::to_string(database_num);              //
+            sclistadr.insert(sclistadr.size(), a);                     //
+            sclistadr.insert(sclistadr.size(), "/scinfo.txt");         //
+
+            eclistadr = db_name;                                       //"Сборка" полного адреса нейм-файла для EC
+            std::string z = std::to_string(database_num);              //
+            eclistadr.insert(eclistadr.size(), a);                     //
+            eclistadr.insert(eclistadr.size(), "/ecinfo.txt");         //
+
+            std::ofstream sc_namelist(sclistadr);                      //Создание нейм-файлов для SC и EC
+            std::ofstream ec_namelist(eclistadr);                      //
+            return "success";
+        }
+        else {
+            return "db exists";                                        //В случае существования БД с заданным именем - возвращает ошибку
+        };
+    };
+
+    std::string open_DB(std::string db_username) {                     //Ф-ия проверяет, существует ли БД и находит её номер
+        std::ifstream namefile("Namelist.txt");                        //Список созданных БД
+        if (namefile.is_open()) {                                      //Получение списка имен
+            getline(namefile, namestring);
+        }
+        else {
+            return "no file";                                          //Возврат ошибки в случает отсуствия нейм-файла
+        }
+        pos = namestring.find(db_username);                            //
+        if (pos != std::string::npos) {                                //
+            is_bd_exist = true;                                        //
+            database_num = namestring[pos + db_username.size()];       //Поиск номера БД если она была создана ранее
+        }
+        else {
+            return "db dose not exist";
+        }
+
+    };
+    
+    std::string add_sc(std::string sc_name) {
+        if (is_bd_exist == true){
+            
+            sc.push_back(5);
+            int i = sc.size()-1;
+            sc[i].add_sc_num(i+1);
+            return "success";
+        }
+        else {
+            return "fail";
+        }
+    };
+
+    void add_ec() {
+        ec.push_back(database_num);
+    };
+};
+
+
+
+
 
 
 
 
 
 int main()
-{
-    std::string bossname[3];
-    bossname[0] = "Ivan";
-    bossname[1] = "Petrovich";
-    bossname[2] = "Cruzhko";
-    for (int i = 0; i < 3; i++) {
-        std::cout << i << "  " << bossname[i];
-    }
+{   
+    std::string result;
+    Database db1;
+    db1.create_DB("Base2_"); 
+    db1.add_sc("sc1");
+    /*std::string a1("./DB_1/info.txt");
+    std::ofstream f1(a1);*/
     return 0;
 }
