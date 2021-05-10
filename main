@@ -70,7 +70,7 @@ int new_file_create(std::string db_name) {                          //ф-ия д
     std::string st1 = "1";
     db_name.insert(db_name.size(), st1);
     for (i = 1; i < a; i++) {
-        if (i < 10){
+        if (i < 10) {
             db_name.erase(db_name.size() - 1, 1);
             st1 = std::to_string(i);
             db_name.insert(db_name.size(), st1);
@@ -95,50 +95,20 @@ int new_file_create(std::string db_name) {                          //ф-ия д
             }
         }
     }
-    return i-1;
+    return i - 1;
 }
 
-std::string new_file_create(std::string db_name, std::string comp_name, int db_num) {   //ф-ия для создания файла внутри каталога с произвольным номером
-    db_name.insert(db_name.size(), "/");
-    db_name.insert(db_name.size(), comp_name);
-    db_name.insert(db_name.size(), "1");
-    int a = 1;
-    for(int i = 1; i < a; i++){
-        if (i < 10){
-            db_name.erase(db_name.size()-1, 1);
-            db_name.insert(db_name.size(), std::to_string(i));
-            std::ifstream namefile(db_name);                        
-            if (namefile.is_open()) {                                      
-                a++;
-            }
-            else {
-                db_name.insert(db_name.size(), ".txt");
-                std::ofstream file(db_name);
-            }
-        }
-        else {
-            db_name.erase(db_name.size()-2, 2);
-            db_name.insert(db_name.size(), std::to_string(i));
-            std::ifstream namefile(db_name);
-            if (namefile.is_open()) {
-                a++;
-            }
-            else {
-                db_name.insert(db_name.size(), ".txt");
-                std::ofstream file(db_name);
-            }
-        }
-    }
-    return db_name;
-}
+
 
 class DB_core {
-
-
+public:
+    DB_core() {};
+    virtual void add_num() {};
+    virtual ~DB_core() {};
 
 };
 
-class Educationcomp {
+class Educationcomp : public DB_core{
 public:
     std::string compname, bossname[3], fullname;
     int asper_num, worker_num, database_num, educationcomp_num;     //аспиранты, работники, номер дб, номер подразделения 
@@ -146,30 +116,30 @@ public:
     std::string db_name = "./DB_", a;
 
 
-    Educationcomp() {};
-    Educationcomp(int database_num1) {                                //создает папку с нужным номером
-        database_num = database_num1;
-        db_name.insert(db_name.size(), std::to_string(database_num));
-        fullname = new_file_create(db_name, compname, database_num);
-        educationcomp_num = fullname[fullname.size() - 1];
-    }
+    //Educationcomp() {};
+    
 };
 
 
 
-class Sciencecomp {
+class Sciencecomp : public DB_core {
 public:
-    std::string compname, bossname[3], fullname;
-    int asper_num, worker_num, database_num, sc_num;                //аспиранты, работники, номер дб, номер подразделения
+    std::string compname, bossname[3], fullname, db_name, a;
+    int asper_num, worker_num, database_num, sc_num;                //Аспиранты, работники, номер дб, номер подразделения
     std::pair< int, std::pair< int, int >> student;                 //int 1 - курс, внутренний int 1 - число студентов, внутренний int 2 - стоимость
-    std::string db_name, a;
+    std::ofstream workfile;                                         //Файл с записями для данной SC
 
-    Sciencecomp() {};
-    Sciencecomp(int database_num1) {
+    //Sciencecomp() {};
+    void add_num(int sc_num1, int database_num1) {                                  //Создает основной файл для SC
         database_num = database_num1;
-    }
-    void add_sc_num(int sc_num1) {
         sc_num = sc_num1;
+        fullname = "./DB_";
+        fullname.insert(fullname.size(), std::to_string(database_num));
+        fullname.insert(fullname.size(), "/");
+        fullname.insert(fullname.size(), "sc_");
+        fullname.insert(fullname.size(), std::to_string(sc_num));
+        fullname.insert(fullname.size(), ".txt");
+        std::ofstream workfile(fullname);
     }
 
 };
@@ -177,15 +147,15 @@ public:
 
 
 
-class Database{
-public: 
+class Database {
+public:
     std::string db_name = "./DB_";
     std::string sclistadr = "", eclistadr = "";                        //Переменная для адреса инфо-листов для научных и учебных компаний
     std::string db_username, namestring;
     int database_num = -1;
     int pos;
     bool is_bd_exist = false;
-    std::vector<Sciencecomp> sc;                                       //Вектор научных и учебных компаний
+    std::vector<DB_core*> sc;                                       //Вектор научных и учебных компаний
     std::vector<Educationcomp> ec;
     std::ofstream sclist, eclist;
 
@@ -247,13 +217,14 @@ public:
         }
 
     };
-    
+
     std::string add_sc(std::string sc_name) {
-        if (is_bd_exist == true){
+        if (is_bd_exist == true) {
+
+            sc.resize(sc.size()+1);
             
-            sc.push_back(5);
-            int i = sc.size()-1;
-            sc[i].add_sc_num(i+1);
+            int i = sc.size() - 1;
+            //sc[i].add_num(i + 1);
             return "success";
         }
         else {
@@ -262,7 +233,7 @@ public:
     };
 
     void add_ec() {
-        ec.push_back(database_num);
+        
     };
 };
 
@@ -275,12 +246,18 @@ public:
 
 
 int main()
-{   
+{
     std::string result;
     Database db1;
-    db1.create_DB("Base2_"); 
+    db1.create_DB("Base2_");
     db1.add_sc("sc1");
     /*std::string a1("./DB_1/info.txt");
     std::ofstream f1(a1);*/
+    int a = 1, b = 2;
+    Sciencecomp sc1;
+    std::vector<DB_core*> v1;
+    v1.push_back(new Sciencecomp);
+    v1[0]->add_num(1);
+    sc1.add_num(a, b);
     return 0;
 }
