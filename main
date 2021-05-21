@@ -24,18 +24,18 @@ namespace fs = std::filesystem;
 4. Реализовать функции в соответствии с вариантом.
 5. Реализовать управление базами данных через интерфейс СУБД:
 5.1) Создание однотипных БД и гибридных БД.         +
-5.2) Вывод на экран* списка существующих БД.
+5.2) Вывод на экран* списка существующих БД.        +
 5.3) Удаление* БД.                                  +
-5.4) Переименование* БД.
-5.5) Открытие** БД.
+5.4) Переименование* БД.                            +
+5.5) Открытие** БД.                                 +
 5.6) Сохранение** БД.                               +
 5.7) Добавление записей в БД.                       +
-5.8) Редактирование записей в БД.
-5.9) Удаление записей в БД.
-5.10) Вывод на экран записей БД.
+5.8) Редактирование записей в БД.                   
+5.9) Удаление записей в БД.                         +
+5.10) Вывод на экран записей БД.                    +
 5.11) Сортировка записей БД.                        +
 5.12) Выборка записей БД по правилу (значению поля).+
-5.13) Сохранение** выборки как новой БД.
+5.13) Сохранение** выборки как новой БД.            +
 
 Справка. Использовать известные приёмы и технологии: типы и алгоритмы STL,
 многофайловые программы, полиморфизм, исключения.
@@ -70,7 +70,7 @@ int new_file_create(std::string db_name) {                          //ф-ия д
     std::string st1 = "1";
     db_name.insert(db_name.size(), st1);
     for (i = 1; i < a; i++) {
-        if (i < 10) {
+        if (i < 11) {
             db_name.erase(db_name.size() - 1, 1);
             st1 = std::to_string(i);
             db_name.insert(db_name.size(), st1);
@@ -98,7 +98,7 @@ int new_file_create(std::string db_name) {                          //ф-ия д
     return i - 1;
 }
 
-int new_number_create(std::string db_name) {                          //ф-ия для создания каталога с именем db_name с учетом возможного наличия одноименных файлов
+int new_number_create(std::string db_name) {                          //Тоже самое, что и вариант сверху, но не создает файл с нумерацией, а просто возвращает подходящий для создания файла номер
     fs::path p;
     int a = 2;
     int i;
@@ -243,13 +243,13 @@ public:
         std::ofstream workfile(fullname);
         std::ofstream out(fullname);                                //Вывод всех значений вне вектора
         out << "Compname:" << compname << "; Bossname:" << bossname << "; Fullname:" << fullname << "; Asper_num:" << std::to_string(asper_num)<< "; Employee_num:" << std::to_string(employee_num) 
-             <<"; Database_num:" << std::to_string(database_num) << "; Ec_num:" << std::to_string(ec_num) << "; Projects "<<projects.size()<< " :";
+             <<"; Database_num:" << std::to_string(database_num) << "; Ec_num:" << std::to_string(ec_num) << "; Projects "<<projects.size()<< " :   ";
         for (int i = 0; i < projects.size(); i++) {                 //Вывод всех значений из вектора
             if (i != projects.size()-1){
-            out << projects[i].first << "," << std::to_string(projects[i].second) << "::";
+            out << ";;first" << i << projects[i].first << ";;second" << i << std::to_string(projects[i].second) << "::";
             }
             else {
-                out << projects[i].first << "," << std::to_string(projects[i].second) << ";";
+                out << ";;first" << i << projects[i].first << ";;second" << i << std::to_string(projects[i].second) << ";;;;;";
             }
         }
     }
@@ -260,21 +260,30 @@ public:
         std::string data;
         getline(in, data);
         compname = find_between(data, "Compname:", "; Bossname:");
-        bossname = find_between(data, "; Bossname:", "; Asper_num:");
-        asper_num = stoi(find_between(data, "; Asper_num:", "; Employee_num"));
-        employee_num = stoi(find_between(data, "; Employee_num", "; Database_num:"));
+        bossname = find_between(data, "; Bossname:", "; Fullname:");
+        fullname = find_between(data, "; Fullname:", "; Asper_num:");
+        asper_num = stoi(find_between(data, "; Asper_num:", "; Employee_num:"));
+        employee_num = stoi(find_between(data, "; Employee_num:", "; Database_num:"));
         database_num = stoi(find_between(data, "; Database_num:", "; Ec_num:"));
         ec_num = stoi(find_between(data, "; Ec_num:", "; Projects "));
-        int studentsize;
-        studentsize = stoi(find_between(data, "; Projects ", " :   "));
-        for (int i = 0; i < studentsize; i++) {
+        int projsize;
+        projsize = stoi(find_between(data, "; Projects ", " :   "));
+        projects.resize(projsize);
+        if (projects.size() != 0) {            
+            for (int i = 0; i < projsize-1; i++) {
+                std::string s1 = ";;first", s2 = ";;second";
+                s1.insert(s1.size(), std::to_string(i));
+                s2.insert(s2.size(), std::to_string(i));
+                projects[i].first = find_between(data, s1, s2);
+                s1 = ";;first";
+                s1.insert(s1.size(), std::to_string(i + 1));
+                projects[i].second = stoi(find_between(data, s2, s1));
+            }
             std::string s1 = ";;first", s2 = ";;second";
-            s1.insert(s1.size(), std::to_string(i));
-            s2.insert(s2.size(), std::to_string(i));
-            projects[i].first = find_between(data, s1, s2);
-            s1 = ";;first";
-            s1.insert(s1.size(), std::to_string(i + 1));
-            projects[i].second = stoi(find_between(data, s2, s1));
+            s1.insert(s1.size(), std::to_string(projsize - 1));
+            s2.insert(s2.size(), std::to_string(projsize - 1));
+            projects[projsize - 1].first = find_between(data, s1, s2);
+            projects[projsize - 1].second = stoi(find_between(data, s2, ";;;;;"));
         }
     }
 
@@ -282,6 +291,7 @@ public:
         return fullname;
     }
 
+    ~Educationcomp() {};
 };
 
 
@@ -294,7 +304,7 @@ public:
     std::string db_name = "./DB_", a;
 
     Sciencecomp() {
-        students.resize(7);
+        
     }
 
     void add_coredata(int database_num1, int sc_num1, std::string compname1) {  //Создает основной файл для SC
@@ -310,9 +320,10 @@ public:
     }
 
     void add_students(int students1, int cost, int course) {
+        students.resize(7);
         if (course <= 7) {
-            students[course - 1].first = students1;
-            students[course - 1].second = cost;
+            students[course].first = students1;
+            students[course].second = cost;
         }
     }
 
@@ -371,8 +382,8 @@ public:
         fullname.insert(fullname.size(), ".txt");
         std::ofstream workfile(fullname);
         std::ofstream out(fullname);                                //Вывод всех значений вне вектора
-        out << "Compname:" << compname << "; Bossname:" << bossname << "; Asper_num:" << std::to_string(asper_num) << "; Employee_num" << std::to_string(employee_num)
-            << "; Database_num:" << std::to_string(database_num) << "; Ec_num:" << std::to_string(sc_num) << "; Projects " << students.size() << " :   ";
+        out << "Compname:" << compname << "; Bossname:" << bossname << "; Fullname:" << fullname << "; Asper_num:" << std::to_string(asper_num) << "; Employee_num" << std::to_string(employee_num)
+            << "; Database_num:" << std::to_string(database_num) << "; Sc_num:" << std::to_string(sc_num) << "; Projects " << students.size() << " :   ";
         int i;
         for (i = 0; i < students.size(); i++) {                     //Вывод всех значений из вектора
             out << ";;first" << i << students[i].first << ";;second" << i << students[i].second;
@@ -383,18 +394,19 @@ public:
     void loadfromfile(std::string fullname1) {
         fullname = fullname1;
         std::ifstream in(fullname);
-        //std::ifstream in("/DB_1/sc_1.txt");
         std::string data;
         getline(in, data);
         compname = find_between(data, "Compname:", "; Bossname:");
-        bossname = find_between(data, "; Bossname:", "; Asper_num:");
-        asper_num = stoi(find_between(data, "; Asper_num:", "; Employee_num"));
+        bossname = find_between(data, "; Bossname:", "; Fullname:");
+        fullname = find_between(data, "; Fullname:", "; Asper_num:");
+        asper_num = stoi(find_between(data, "; Asper_num:", "; Employee_num:"));
         employee_num = stoi(find_between(data, "; Employee_num", "; Database_num:"));
         database_num = stoi(find_between(data, "; Database_num:", "; Ec_num:"));
-        sc_num = stoi(find_between(data, "; Ec_num:", "; Projects "));
+        sc_num = stoi(find_between(data, "; Sc_num:", "; Projects "));
         int studentsize;
         studentsize = stoi(find_between(data, "; Projects ", " :   "));
-        for (int i = 0; i < studentsize; i++) {
+        students.resize(7);
+        for (int i = 0; i < 7; i++) {
             std::string s1 = ";;first", s2 = ";;second";
             s1.insert(s1.size(), std::to_string(i));
             s2.insert(s2.size(), std::to_string(i));
@@ -409,6 +421,7 @@ public:
         return fullname;
     }
 
+    ~Sciencecomp() {};
 };
 
 
@@ -416,12 +429,12 @@ public:
 
 class Database {
 public:
-    std::string db_name = "./DB_", db_username, namestring, fullname = db_name;
+    std::string db_name = "./DB_", db_username, namestring, fullname = db_name, old_db_name;
     std::string sclistadr = "", eclistadr = "";                        //Переменная для адреса инфо-листов для научных и учебных компаний
     int database_num = -1, pos, active_comp;
-    bool is_bd_exist = false;
+    bool is_bd_exist = false, is_bd_saved = false, is_bd_renamed = false;
     std::vector<DB_core*> comps;                                       //Вектор научных и учебных компаний
-    std::vector<std::string> fullnames;
+    std::vector<std::string> fullnames, compnames;
 
     Database() {
         comps.resize(0);
@@ -444,22 +457,32 @@ public:
             else {
                 return "no file";                                          //Возврат ошибки в случает отсуствия нейм-файла
             }
-            pos = namestring.find(db_username1);                            //
+            pos = namestring.find(db_username1);                           //
             if (pos != std::string::npos) {                                //
                 is_bd_exist = true;                                        //
-                database_num = namestring[pos + db_username1.size()] - '0';       //Поиск номера БД если она была создана ранее
-                
+                if (pos != 0) {
+                    namestring.erase(0, pos);
+                }
+                int posend = -1;
+                posend = namestring.find(";");
+                pos = namestring.find("_");
+                namestring.erase(0, pos+1);
+                database_num = stoi(namestring);
                 fullname.insert(fullname.size(), std::to_string(database_num));
                 fullname.insert(fullname.size(), "/dbinfo.txt");
                 std::ifstream in(fullname);
                 std::string data;
                 getline(in, data);                                         //Считывание из файла информации о БД
+                if (find_between(data, "Is_db_saved:", "; DB_name:") == "1") {
+                    is_bd_saved = true;
+                }
                 db_name = find_between(data, "DB_name:", "; DB_username:");
+                db_username = find_between(data, "; DB_username:", "; Sclistadr:");
                 sclistadr = find_between(data, "; Sclistadr:", "; Eclistadr");
                 eclistadr = find_between(data, "; Eclistadr", "; Database_num:");
                 database_num = stoi(find_between(data, "; Database_num:", "; Comps "));
                 fullnames.resize(stoi(find_between(data, "; Comps ", " ; ")));
-                for (int i = 0; i < stoi(find_between(data, "; Comps ", " ; ")); i++) {
+                for (int i = 0; i < stoi(find_between(data, "; Comps ", "; ")); i++) {
                     std::string s1 = ";";
                     s1.insert(s1.size(), std::to_string(i));
                     s1.insert(s1.size(), ";");
@@ -491,41 +514,56 @@ public:
     };
 
     void save_bd() {
-        database_num = new_file_create(db_name);                   //Создает файл с нумерацией
-        std::ofstream outer("Namelist.txt", std::ios::app);          //Проверка на нейм-файл не осуществляется т.к. была до этого
-        outer << db_username << database_num << ";";                 //Добавление в нейм-файл имени и номера БД
-        is_bd_exist = true;
+        if (is_bd_saved == true) {
+            if (is_bd_renamed == true) {
+                old_db_name.insert(old_db_name.size(), std::to_string(database_num));
+                std::ifstream inner("Namelist.txt"); 
+                std::string s1;
+                getline(inner, s1);
+                pos = s1.find(old_db_name);
+                s1.erase(pos, old_db_name.size() + 1);
+                std::ofstream outer("Namelist.txt");
+                outer << db_username << database_num << ";";
+            }
+        }
+        if (is_bd_saved == false) {
+            database_num = new_file_create(db_name);                     //Создает файл с нумерацией
+            std::ofstream outer("Namelist.txt", std::ios::app);          //Проверка на нейм-файл не осуществляется т.к. была до этого
+            outer << db_username << database_num << ";";                 //Добавление в нейм-файл имени и номера БД
+            is_bd_exist = true;
 
-        fullname.insert(fullname.size(), std::to_string(database_num));
-        fullname.insert(fullname.size(), "/dbinfo.txt");           //Создание файла для информации о БД
-        std::ofstream db_info(fullname);                           //
+            fullname.insert(fullname.size(), std::to_string(database_num));
+            fullname.insert(fullname.size(), "/dbinfo.txt");           //Создание файла для информации о БД
+            std::ofstream db_info(fullname);                           //
 
-        sclistadr = db_name;                                       //"Сборка" полного адреса нейм-файла для SC
-        std::string a = std::to_string(database_num);              //
-        sclistadr.insert(sclistadr.size(), a);                     //
-        sclistadr.insert(sclistadr.size(), "/scinfo.txt");         //
+            sclistadr = db_name;                                       //"Сборка" полного адреса нейм-файла для SC
+            std::string a = std::to_string(database_num);              //
+            sclistadr.insert(sclistadr.size(), a);                     //
+            sclistadr.insert(sclistadr.size(), "/scinfo.txt");         //
 
-        eclistadr = db_name;                                       //"Сборка" полного адреса нейм-файла для EC
-        std::string z = std::to_string(database_num);              //
-        eclistadr.insert(eclistadr.size(), a);                     //
-        eclistadr.insert(eclistadr.size(), "/ecinfo.txt");         //
+            eclistadr = db_name;                                       //"Сборка" полного адреса нейм-файла для EC
+            std::string z = std::to_string(database_num);              //
+            eclistadr.insert(eclistadr.size(), a);                     //
+            eclistadr.insert(eclistadr.size(), "/ecinfo.txt");         //
 
-        std::ofstream sc_namelist(sclistadr);                      //Создание нейм-файлов для SC и EC
-        std::ofstream ec_namelist(eclistadr);                      //
-
-        std::ofstream out(fullname);                                //Вывод всех значений вне вектора
+            std::ofstream sc_namelist(sclistadr);                      //Создание нейм-файлов для SC и EC
+            std::ofstream ec_namelist(eclistadr);                      //
+        }
+        is_bd_saved = true;
+        std::ofstream out(fullname);                                   //Вывод всех значений вне вектора
         for (int i = 0; i < comps.size(); i++) {
             comps[i]->saveintofile();
         }
-        out << "DB_name:" << db_name << "; DB_username:" << db_username  << "; Sclistadr:" << sclistadr << "; Eclistadr" << eclistadr
-                << "; Database_num:" << std::to_string(database_num) << "; Comps " << comps.size() << " ; ";
+        out << "Is_db_saved:" << is_bd_saved << "; DB_name:" << db_name << "; DB_username:" << db_username  << "; Sclistadr:" << sclistadr << "; Eclistadr" << eclistadr
+                << "; Database_num:" << std::to_string(database_num) << "; Comps " << comps.size() << "; ";
         if (comps.size() == 0) {
             out << "12345guba1234512";                              //Код отсуствия созданных sc и ec
         }
         else{
             for (int i = 0; i < comps.size(); i++) {
-                out << ";" << i << ";" << comps[i]->get_fullname() << ";" << i + 1 << ";";
+                out << ";" << i << ";" << comps[i]->get_fullname();
             }
+            out << ";" << comps.size() << ";";
         }
         
     }
@@ -537,6 +575,7 @@ public:
             std::ofstream out(sclistadr, std::ios::app); 
             out << sc_name << "_" << std::to_string(comps.size()) << ";";        //Добавление в нейм-файл имени и номера
             active_comp = comps.size();
+            compnames.push_back(sc_name);
             return "success";
         }
         else {
@@ -549,12 +588,33 @@ public:
             comps.push_back(new Educationcomp);                                  //Создает новую учебную компанию
             comps[comps.size() - 1]->add_coredata(database_num, comps.size(), ec_name);
             std::ofstream out(eclistadr, std::ios::app);
-            out << ec_name << "_" << std::to_string(comps.size()) << ";";        //Добавление в нейм-файл имени и номера
+            out << ec_name << std::to_string(comps.size()) << ";";        //Добавление в нейм-файл имени и номера
+            active_comp = comps.size();
+            compnames.push_back(ec_name);
             return "success";
         }
         else {
             return "fail";
         }
+    }
+
+    void copy_db() {
+        std::string db_name_new = db_name;
+        int newnumber = new_number_create(db_name);
+        db_name.insert(db_name.size(), std::to_string(database_num));
+        db_name_new.insert(db_name_new.size(), std::to_string(newnumber));
+        fs::copy(db_name, db_name_new);
+        std::ofstream outer("Namelist.txt", std::ios::app);
+        outer << db_username  << newnumber << ";";
+
+        db_name = "./DB_";
+    };
+
+    void rename_db(std::string db_username1) {
+        old_db_name = db_username;
+        is_bd_renamed = true;
+        db_username = db_username1;
+        
     }
 
     void add_comp_data(std::string bossname1, int asper, int empl){
@@ -638,8 +698,183 @@ public:
         nf << name1;
     }
 
-    ~Database();
+    std::string get_name() {
+        return db_username;
+    }
+
+    std::vector<std::string> get_compnames() {
+        std::vector<std::string> result;
+        result.resize(0);
+        for (int i = 0; i < comps.size(); i++) {
+            result.push_back(comps[i]->get_name());
+        }
+        return result;
+    }
+
+    void delete_comp(std::string companyname) {
+        int a = 0;
+        for (int i = 0; i < comps.size(); i++) {
+            if (comps[i]->get_name() == companyname) {
+                a = i;
+            }
+        }
+        std::string s = comps[a]->get_fullname();
+        fs::remove_all(s);
+    }
+
+    void change_comp_name(std::string comp, std::string newcompname) {
+        int a = 0;
+        for (int i = 0; i < comps.size(); i++) {
+            if (comps[i]->get_name() == comp) {
+                a = i;
+            }
+        }
+        comps[a]->add_coredata(database_num, a, newcompname);
+    }
+
+    void change_2nd_compdata(std::string comp, std::string bossname, int empl, int asp) {
+        int a = 0;
+        for (int i = 0; i < comps.size(); i++) {
+            if (comps[i]->get_name() == comp) {
+                a = i;
+            }
+        }
+        comps[a]->add_data(bossname, asp, empl);
+    }
+
+    void change_opcional_data() {}
+
+    ~Database() {};
 };
+
+void db_menu(Database& db1, std::string name) {
+    int i;
+    do {
+        
+        std::cout << "Создать Образовательное подразделение - 1" << std::endl << "Создать Научное подразделение - 2" << std::endl
+            << "Сохранить БД - 3" << std::endl << "Удалить БД - 4" << std::endl << "Редактировать БД - 5" << std::endl << "Копировать БД - 6"
+            << std::endl << "Переименовать БД - 7" << std::endl << "Показать полный список компаний - 8" << std::endl << "Удалить компанию - 9" 
+            << std::endl << "Редактировать компанию - 10" << std::endl << "Выход - 0" << std::endl << "Назад в меню - 99" << std::endl;
+        std::cin >> i;
+        if (i == 1) {
+            i = -1;
+            std::string name1 = "";
+            std::string bossname = "";
+            int asper;
+            int empl;
+            int prognum;
+            std::cout << "Введите название подразделения:  ";
+            std::cin.ignore();
+            std::getline(std::cin, name1);
+            db1.create_ec(name1);
+            std::cout << std::endl << "Введите имя руководителя:   ";
+            std::getline(std::cin, bossname);
+            std::cout << std::endl << "Введите число аспирантов:  ";
+            std::cin >> asper;
+            std::cout << std::endl << "Введите число работников:  ";
+            std::cin >> empl;
+            db1.add_comp_data(bossname, asper, empl);
+            std::cout << std::endl << "Введите количество учебных проектов:  ";
+            std::cin >> prognum;
+            for (int a = 0; a < prognum; a++) {
+                std::string progname = "";
+                std::cout << std::endl << "Введите название программы:   ";
+                std::cin.ignore();
+                std::getline(std::cin, progname);
+                int cost;
+                std::cout << std::endl << "Введите стоимость программы:   ";
+                std::cin >> cost;
+                db1.add_projects(progname, cost);
+            }
+        }
+        if (i == 2) {
+            i = -1;
+            int empl;
+            int asper;
+            std::cout << "Введите название подразделения:  ";
+            std::cin.ignore();
+            std::getline(std::cin, name);
+            db1.create_sc(name);
+            std::string bossname = "";
+            std::cout << std::endl << "Введите имя руководителя:   ";
+            std::cin.ignore();
+            std::getline(std::cin, bossname);
+            std::cout << std::endl << "Введите число аспирантов:  ";
+            std::cin >> asper;
+            std::cout << std::endl << "Введите число работников:  ";
+            std::cin >> empl;
+            db1.add_comp_data(bossname, asper, empl);
+            std::cout << std::endl << "Введите информацию о студентах:  ";
+            for (int a = 0; a < 7; a++) {
+                int students;
+                int cost;
+                std::cout << std::endl << "Курс " << a + 1 << std::endl << "Введите количество студентов:  ";
+                std::cin >> students;
+                std::cout << std::endl << "Введите стоимость обучения:   ";
+                std::cin >> cost;
+                db1.add_students(students, cost, a);
+            }
+        }
+        if (i == 3) {
+            i = -1;
+            db1.save_bd();
+            std::cout << "Success" << std::endl;
+        }
+        if (i == 4) {
+            db1.delete_db();
+            i = 9;
+        }
+        if (i == 5) {
+
+        }
+        if (i == 6) {
+            i = -1;
+            db1.copy_db();
+        }
+        if (i == 7) {
+            i = -1;
+            std::string name1;
+            std::cout << "Введите новое название:  ";
+            std::cin.ignore();
+            std::getline(std::cin, name1);
+            name1.insert(name1.size(), "_");
+            db1.rename_db(name1);
+        }
+        if (i == 8) {
+            i = -1;
+            std::vector<std::string> v1;
+            v1 = db1.get_compnames();
+            for (int a = 0; a < v1.size(); a++) {
+                std::cout << std::endl << v1[i] << std::endl;
+            }
+        }
+        if (i == 9) {
+            i = -1;
+            std::vector<std::string> v1;
+            v1 = db1.get_compnames();
+            for (int a = 0; a < v1.size(); a++) {
+                std::cout << std::endl << v1[i] << std::endl;
+            }
+            std::string name1;
+            std::cout << "Введите название компании из списка выше:  ";
+            std::cin.ignore();
+            std::getline(std::cin, name1);
+            db1.delete_comp(name1);
+        }
+        if (i == 10) {
+            i = -1;
+            std::vector<std::string> v1;
+            v1 = db1.get_compnames();
+            for (int a = 0; a < v1.size(); a++) {
+                std::cout << std::endl << v1[i] << std::endl;
+            }
+            std::string name1;
+            std::cout << "Введите название компании из списка выше:  ";
+            std::cin.ignore();
+            std::getline(std::cin, name1);
+        }
+    } while (i != 99);
+}
 
 int main()
 {
@@ -648,7 +883,7 @@ int main()
     std::string name;
     do {
         std::cout << "Выберите нужный пункт:" << std::endl << "Создать БД - 1" << std::endl << "Открыть БД - 2" 
-            << std::endl << "Удалить БД - 3" << std::endl << "Получить список БД - 4" << std::endl << "Выход - 0" << std::endl;
+            << std::endl << std::endl << "Выход - 0" << std::endl;
         std::cin >> i;
         if (i == 1) {
             i = -1;
@@ -658,75 +893,7 @@ int main()
             name.insert(name.size(), "_");
             Database db1;
             db1.create_DB(name);
-            do {
-                std::cout << "Создать Образовательное подразделение - 1" << std::endl << "Создать Научное подразделение - 2" << std::endl 
-                    << "Сохранить БД - 3" << std::endl << "Удалить БД - 4" << std::endl << "Редактировать БД - 5" << std::endl << "Выход - 0" << std::endl << "Назад в меню - 9" << std::endl;
-                std::cin >> i;
-                if (i == 1) {
-                    i = -1;
-                    std::string name1 = "";
-                    std::string bossname = "";
-                    int asper;
-                    int empl;
-                    int prognum;
-                    std::cout << "Введите название подразделения:  ";
-                    std::cin.ignore();
-                    std::getline(std::cin, name1);
-                    db1.create_ec(name1);
-                    std::cout << std::endl << "Введите имя руководителя:   ";
-                    std::getline(std::cin, bossname);
-                    std::cout << std::endl << "Введите число аспирантов:  ";
-                    std::cin >> asper;
-                    std::cout << std::endl << "Введите число работников:  ";
-                    std::cin >> empl;
-                    db1.add_comp_data(bossname, asper, empl);
-                    std::cout << std::endl << "Введите количество учебных проектов:  ";
-                    std::cin >> prognum;
-                    for (int a = 0; a < prognum; a++) {
-                        std::string progname = "";
-                        std::cout << std::endl << "Введите название программы:   ";
-                        std::cin.ignore();
-                        std::getline(std::cin, progname);
-                        int cost;
-                        std::cout << std::endl << "Введите стоимость программы:   ";
-                        std::cin >> cost;
-                        db1.add_projects(progname, cost);
-                    }
-                }
-                if (i == 2) {
-                    i = -1;
-                    int empl;
-                    int asper;
-                    std::cout << "Введите название подразделения:  ";
-                    std::cin.ignore();
-                    std::getline(std::cin, name);
-                    db1.create_ec(name);
-                    std::string bossname = "";
-                    std::cout << std::endl << "Введите имя руководителя:   ";
-                    std::cin.ignore();
-                    std::getline(std::cin, bossname);
-                    std::cout << std::endl << "Введите число аспирантов:  ";
-                    std::cin >> asper;
-                    std::cout << std::endl << "Введите число работников:  ";
-                    std::cin >> empl;
-                    db1.add_comp_data(bossname, asper, empl);
-                    std::cout << std::endl << "Введите информацию о студентах:  ";                    
-                    for (int a = 0; a < 7; a++) {
-                        int students;
-                        int cost;
-                        std::cout << std::endl << "Курс " << a << std::endl << "Введите количество студентов:  ";                       
-                        std::cin >> students;                        
-                        std::cout << std::endl << "Введите стоимость обучения:   ";
-                        std::cin >> cost;
-                        db1.add_students(students, cost, a);
-                    }
-                }
-                if (i == 3) {
-                    i = -1;
-                    db1.save_bd();
-                    std::cout << "Success" << std::endl;
-                }
-            } while (i != 9);
+            db_menu(db1, name);
             db1.~Database();
         }
         if (i == 2) {
@@ -734,19 +901,24 @@ int main()
             std::string searchdb = "", s1 = "\n";
             std::ifstream namefile("Namelist.txt");
             getline(namefile, searchdb);
-            do{
-            searchdb.replace(searchdb.find(";"), 1, s1);
-            } while (searchdb.find(";") != -1);
-            std::cout << searchdb;            
-            std::string to_open = "";
-            
-            std::cout << "Введите название базы из списка выше:" << std::endl;
-            std::cin.ignore();
-            std::getline(std::cin, to_open);
-            Database db1;
-            db1.open_DB(to_open);
-        }
+            if (searchdb.size() != 0) {
+                do {
+                    searchdb.replace(searchdb.find(";"), 1, s1);
+                } while (searchdb.find(";") != -1);
+                std::cout << searchdb;
+                std::string to_open = "";
 
+                std::cout << "Введите название базы из списка выше:" << std::endl;
+                std::cin.ignore();
+                std::getline(std::cin, to_open);
+                Database db1;
+                db1.open_DB(to_open);
+                db_menu(db1, db1.get_name());
+            }
+            else {
+                std::cout << "Нет БД" << std::endl << std::endl;
+            }
+        }
     } while (i != 0);
 
     return 0;
